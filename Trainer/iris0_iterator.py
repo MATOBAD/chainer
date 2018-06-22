@@ -28,9 +28,8 @@ class IrisChain(Chain):
         h2 = self.l2(h1)
         return h2
 
+
 # 訓練データのバッチと教師データのバッチに分解する関数
-
-
 def decomp(batch, batchsize):
     x = []
     t = []
