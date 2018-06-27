@@ -10,12 +10,13 @@ import chainer.functions as F
 import chainer.links as L
 from chainer.training import extension
 from chainer.datasets import tuple_dataset
+from chainer.cuda import cupy
 
 
 class MyModel(Chain):
     def __init__(self):
         super(MyModel, self).__init__(
-            cn1=L.Convolution2D(1, 20, 5),
+            cn1=L.Convolution2D(1, 20, 5).to_gpu,
             cn2=L.Convolution2D(20, 50, 5),
             l1=L.Linear(800, 500),
             l2=L.Linear(500, 10),
@@ -33,7 +34,7 @@ class MyModel(Chain):
 
 if __name__ == "__main__":
     xp = cuda.cupy
-    train, test = datasets.get_mnist(ndim=3)
+    train, test = datasets.get_mnist(ndim=3, dtype=xp.float32)
 
     # モデルの生成
     model = MyModel()

@@ -31,7 +31,6 @@ class MyModel(Chain):
 
 if __name__ == "__main__":
     train, test = datasets.get_mnist(ndim=3)
-
     # モデルの生成
     model = MyModel()
     optimizer = optimizers.Adam()
