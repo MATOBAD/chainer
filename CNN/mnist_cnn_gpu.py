@@ -34,18 +34,18 @@ class MyModel(Chain):
 
 if __name__ == "__main__":
     xp = cuda.cupy
-    train, test = datasets.get_mnist(ndim=3, dtype=xp.float32)
+    train, test = datasets.get_mnist(ndim=3, )
 
     # モデルの生成
     model = MyModel()
-    cuda.get_device(0).use()
+    cuda.get_device(-1).use()
     model.to_gpu()
     optimizer = optimizers.Adam()
     optimizer.setup(model)
 
     # パラメータの更新
     iterator = iterators.SerialIterator(train, 1000)
-    updater = training.StandardUpdater(iterator, optimizer)
+    updater = training.StandardUpdater(iterator, optimizer, device=-1)
     trainer = training.Trainer(updater, (10, 'epoch'))
 
     trainer.run()
