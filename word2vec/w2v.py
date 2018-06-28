@@ -10,6 +10,35 @@ import chainer.functions as F
 import chainer.links as L
 import collections
 from chainer.utils import walker_alias  # 離散型の確率分布からの乱数生成アルゴリズム
+ws = 3  # window size
+ngs = 5  # negative sample size
+
+
+def mkbatset(dataset, ids):
+    xb, yb, tb = [], [], []
+    for pos in ids:
+        xid = dataset[pos]
+        for i in range(1, ws):
+            p = pos - i
+            if p >= 0:
+                xb.append(xid)
+                yid = dataset[p]
+                tb.append(1)
+                for nid in sampler.sample(ngs):
+                    xb.append(yid)
+                    yb.append(nid)
+                    tb.append(0)
+            p = pos + i
+            if p < datasize:
+                xb.append(xid)
+                yid = dataset[p]
+                yb.append(yid)
+                tb.append(1)
+                for nid in sampler.sample(ngs):
+                    xb.append(yid)
+                    yb.append(nid)
+                    tb.append(0)
+    return [xb, yb, tb]
 
 
 class MyW2V(Chain):
@@ -26,7 +55,7 @@ class MyW2V(Chain):
         fv = self.fwd(xc, yc)
         return F.softmax_cross_entropy(fv, tc)
 
-    def fwd(self, x):
+    def fwd(self, x, y):
         xv = self.embed(x)  # 単語id xに対する分散表現
         yv = self.embed(y)  # 単語id yに対する分散表現
         return F.sum(xv * yv, axis=1)
@@ -54,25 +83,28 @@ if __name__ == "__main__":
     sampler = walker_alias.WalkerAlias(p)
 
     # モデルの生成
-    model = MyModel()
+    demb = 100
+    model = MyW2V(n_vocab, demb)
     optimizer = optimizers.Adam()
     optimizer.setup(model)
 
     # パラメータの更新
-    iterator = iterators.SerialIterator(train, 1000)
-    updater = training.StandardUpdater(iterator, optimizer)
-    trainer = training.Trainer(updater, (10, 'epoch'))
+    bs = 100  # batch size
+    for epoch in range(10):
+        print('epoch: {0}'.format(epoch))
+        indexes = np.random.permutation(datasize)
+        for pos in range(0, datasize, bs):
+            print(epoch, pos)
+            ids = indexes[pos:(pos+bs) if (pos+bs) < datasize else datasize]
+            xb, yb, tb = mkbatset(dataset, ids)
+            model.cleargrads()
+            loss = model(xb, yb, tb)
+            loss.backward()
+            optimizer.update()
 
-    trainer.run()
-
-    # 評価
-    ok = 0
-    for i in range(len(test)):
-        x = Variable(np.array([test[i][0]], dtype=np.float32))
-        t = test[i][1]
-        out = model.fwd(x)
-        ans = np.argmax(out.data)
-        if (ans == t):
-            ok += 1
-
-    print((ok * 1.0) / len(test))
+    with open('myw2v.model', 'w') as f:
+        f.write('%d %d\n' % (len(index2word), 100))
+        w = model.embed.W.data
+        for i in range(w.shape[0]):
+            v = ' '.join(['%f' % v for v in w[i]])
+            f.write('%s %s\n' % (index2word[i], v))
