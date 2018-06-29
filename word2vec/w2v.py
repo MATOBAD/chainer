@@ -23,6 +23,7 @@ def mkbatset(dataset, ids):
             if p >= 0:
                 xb.append(xid)
                 yid = dataset[p]
+                yb.append(yid)
                 tb.append(1)
                 for nid in sampler.sample(ngs):
                     xb.append(yid)
@@ -53,7 +54,7 @@ class MyW2V(Chain):
         yc = Variable(np.array(yb, dtype=np.int32))
         tc = Variable(np.array(tb, dtype=np.int32))
         fv = self.fwd(xc, yc)
-        return F.softmax_cross_entropy(fv, tc)
+        return F.sigmoid_cross_entropy(fv, tc)
 
     def fwd(self, x, y):
         xv = self.embed(x)  # 単語id xに対する分散表現
@@ -90,6 +91,7 @@ if __name__ == "__main__":
 
     # パラメータの更新
     bs = 100  # batch size
+    print(datasize)
     for epoch in range(10):
         print('epoch: {0}'.format(epoch))
         indexes = np.random.permutation(datasize)
