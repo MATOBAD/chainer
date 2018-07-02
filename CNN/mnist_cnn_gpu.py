@@ -11,8 +11,7 @@ import chainer.functions as F
 import chainer.links as L
 from chainer.training import extension
 from chainer.datasets import tuple_dataset
-from chainer.cuda import cupy
-xp = cuda.cupy
+from dataset import mnist
 
 
 class MyModel(Chain):
@@ -35,12 +34,18 @@ class MyModel(Chain):
 
 
 def main():
+    xp = cuda.cupy
     # モデルの生成
     model = MyModel()
     if args.gpu >= 0:
+        (x_train, t_train), (x_test, t_test) =\
+            load_mnist(normalize=True, one_hot_label=True)
+        train = tuple(x_train, t_train)
+        test = tuple(x_test, t_test)
         chainer.cuda.get_device(args.gpu).use()  # Make a specified GPU current
         model.to_gpu()  # Copy the model to the GPU
     else:
+        train, test = datasets.get_mnist(ndim=3)
         xp = np
     optimizer = optimizers.Adam()
     optimizer.setup(model)
