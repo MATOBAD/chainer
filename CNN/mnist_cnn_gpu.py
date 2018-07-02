@@ -35,12 +35,17 @@ class MyModel(Chain):
 
 
 def main():
-    train, test = datasets.get_mnist(ndim=3, dtype=xp.float32)
-
     # モデルの生成
     model = MyModel()
+    if args.gpu >= 0:
+        chainer.cuda.get_device(args.gpu).use()  # Make a specified GPU current
+        model.to_gpu()  # Copy the model to the GPU
+    else:
+        xp = np
     optimizer = optimizers.Adam()
     optimizer.setup(model)
+
+    train, test = datasets.get_mnist(ndim=3, dtype=xp.float32)
 
     # パラメータの更新
     iterator = iterators.SerialIterator(train, 1000)
@@ -66,9 +71,4 @@ if __name__ == "__main__":
     parser.add_argument('--gpu', '-g', type=int, default=-1,
                         help='GPU ID (negative value indicates CPU)')
     args = parser.parse_args()
-    if args.gpu >= 0:
-        chainer.cuda.get_device(args.gpu).use()  # Make a specified GPU current
-        model.to_gpu()  # Copy the model to the GPU
-    else:
-        xp = np
     main()
