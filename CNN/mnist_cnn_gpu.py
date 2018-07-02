@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 import numpy as np
+import argparse
 import chainer
 from chainer import cuda, Function, \
     report, training, utils, Variable
@@ -11,12 +12,13 @@ import chainer.links as L
 from chainer.training import extension
 from chainer.datasets import tuple_dataset
 from chainer.cuda import cupy
+xp = cuda.cupy
 
 
 class MyModel(Chain):
     def __init__(self):
         super(MyModel, self).__init__(
-            cn1=L.Convolution2D(1, 20, 5).to_gpu,
+            cn1=L.Convolution2D(1, 20, 5),
             cn2=L.Convolution2D(20, 50, 5),
             l1=L.Linear(800, 500),
             l2=L.Linear(500, 10),
@@ -32,20 +34,17 @@ class MyModel(Chain):
         return self.l2(h3)
 
 
-if __name__ == "__main__":
-    xp = cuda.cupy
-    train, test = datasets.get_mnist(ndim=3, )
+def main():
+    train, test = datasets.get_mnist(ndim=3, dtype=xp.float32)
 
     # モデルの生成
     model = MyModel()
-    cuda.get_device(-1).use()
-    model.to_gpu()
     optimizer = optimizers.Adam()
     optimizer.setup(model)
 
     # パラメータの更新
     iterator = iterators.SerialIterator(train, 1000)
-    updater = training.StandardUpdater(iterator, optimizer, device=-1)
+    updater = training.StandardUpdater(iterator, optimizer, device=args.gpu)
     trainer = training.Trainer(updater, (10, 'epoch'))
 
     trainer.run()
@@ -61,3 +60,15 @@ if __name__ == "__main__":
             ok += 1
 
     print((ok * 1.0) / len(test))
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Chainer example: MNIST')
+    parser.add_argument('--gpu', '-g', type=int, default=-1,
+                        help='GPU ID (negative value indicates CPU)')
+    args = parser.parse_args()
+    if args.gpu >= 0:
+        chainer.cuda.get_device(args.gpu).use()  # Make a specified GPU current
+        model.to_gpu()  # Copy the model to the GPU
+    else:
+        xp = np
+    main()
