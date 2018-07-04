@@ -14,6 +14,7 @@ ws = 3  # window size
 ngs = 5  # negative sample size
 
 
+# 単語のペアの集合のバッチを作る関数
 def mkbatset(dataset, ids):
     xb, yb, tb = [], [], []
     for pos in ids:
@@ -63,6 +64,7 @@ class MyW2V(Chain):
 
 
 if __name__ == "__main__":
+    # 単語辞書の作成
     index2word = {}  # 単語のid番号から単語を取り出す辞書
     word2index = {}  # 単語から単語のid番号を取り出す辞書
     couunts = collections.Counter()
@@ -81,10 +83,11 @@ if __name__ == "__main__":
     cs = [couunts[w] for w in range(len(couunts))]
     power = np.float32(0.75)
     p = np.array(cs, power.dtype)
+    # サンプル生成器(離散型の確率分布)
     sampler = walker_alias.WalkerAlias(p)
 
     # モデルの生成
-    demb = 100
+    demb = 100  # 分散表現の次元数
     model = MyW2V(n_vocab, demb)
     optimizer = optimizers.Adam()
     optimizer.setup(model)
