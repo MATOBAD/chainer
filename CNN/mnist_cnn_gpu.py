@@ -39,7 +39,7 @@ def main():
     model = MyModel()
     if args.gpu >= 0:
         (x_train, t_train), (x_test, t_test) =\
-            load_mnist(normalize=True, one_hot_label=True)
+            mnist.load_mnist(normalize=True, one_hot_label=True)
         train = tuple(x_train, t_train)
         test = tuple(x_test, t_test)
         chainer.cuda.get_device(args.gpu).use()  # Make a specified GPU current

@@ -46,7 +46,7 @@ def mkbatset(dataset, ids):
 class MyW2V(Chain):
     def __init__(self, n_vocab, n_units):
         super(MyW2V, self).__init__(
-            embed=L.EmbedID(n_vocab, n_units),
+            embed=L.EmbedID(n_vocab, n_units),  # one-hot表現
         )
 
     def __call__(self, xb, yb, tb):
