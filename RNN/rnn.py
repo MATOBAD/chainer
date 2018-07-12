@@ -21,6 +21,9 @@ def load_data(filename):
         dataset[i] = vocab[word]
     return dataset
 
+train_data = load_data('ptb.train.txt')
+eos_id = vocab['<eos>']
+
 
 class MyRNN(Chain):
     def __init__(self, v, k):
@@ -36,18 +39,15 @@ class MyRNN(Chain):
         h = Variable(np.zeros((1, k), dtype=np.float32))
         for i in range(len(s)):
             next_w_id = eos_id if (i == len(s) - 1) else s[i+1]
-            tx = Variable(np.array([next_w_id], dtype=float32))
-            x_k = self.embed(Variable(np.array([s[i]], dtype=float32)))
+            tx = Variable(np.array([next_w_id], dtype=np.int32))
+            x_k = self.embed(Variable(np.array([s[i]], dtype=np.int32)))
             h = F.tanh(x_k + self.H(h))
             loss = F.softmax_cross_entropy(self.W(h), tx)
             accum_loss = loss if accum_loss is None else accum_loss + loss
         return accum_loss
 
 
-def main:
-    train_data = load_data('ptb.train.txt')
-    eos_id = vocab['<eos>']
-
+def main():
     # モデルの生成
     demb = 100
     model = MyRNN(len(vocab), demb)
