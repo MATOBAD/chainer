@@ -65,3 +65,22 @@ class VAE(chainer.Chain):
                 {'rec_loss': rec_loss, 'loss': self.loss}, observer=self)
             return self.loss
         return lf
+
+
+class CNN(chainer.Chain):
+    def __init__(self):
+        super(CNN, self).__init__(
+            cn1=L.Convolution2D(1, 20, 5),
+            cn2=L.Convolution2D(20, 50, 5),
+            l1=L.Linear(800, 500),
+            l2=L.Linear(500, 10),
+        )
+
+    def __call__(self, x, t):
+        return F.softmax_cross_entropy(self.fwd(x), t)
+
+    def fwd(self, x):
+        h1 = F.max_pooling_2d(F.relu(self.cn1(x)), 2)
+        h2 = F.max_pooling_2d(F.relu(self.cn2(h1)), 2)
+        h3 = F.dropout(F.relu(self.l1(h2)))
+        return self.l2(h3)
