@@ -39,17 +39,14 @@ def main():
     train, test = chainer.datasets.get_mnist(ndim=3)
     print('before:train: {0}, test: {1}'.format(len(train), len(test)))
     if args.vae:
-        data = [[i] for i in range(len(train))]
-        print(np.shape(train))
+        data = [[i]*2 for i in range(len(train))]
         for i, d in enumerate(train):
-            data[i] = train[i][1]
-        print(data[0])
-        sys.exit()
+            data[i][1] = train[i][1]
         model = net.VAE(784, args.dimz, 500)
         serializers.load_npz('model/vae.npz', model)
         for i, x in enumerate(train):
-            x1 = model(x)
-            data[i][1] = x1
+            x1 = model.forward(x)
+            data[i][0] = np.array(x1, dtype=float32)
 
     print('after:train: {0}, test: {1}'.format(len(train), len(test)))
     sys.exit()
