@@ -37,19 +37,19 @@ def main():
     args = parser.parse_args()
 
     train, test = chainer.datasets.get_mnist(ndim=3)
-    print('before:train: {0}, test: {1}'.format(len(train), len(test)))
+    print('before:data: {0}, test: {1}'.format(np.shape(train), len(test)))
     if args.vae:
-        data = [[i]*2 for i in range(len(train))]
-        for i, d in enumerate(train):
-            data[i][1] = train[i][1]
         model = net.VAE(784, args.dimz, 500)
         serializers.load_npz('model/vae.npz', model)
-        for i, x in enumerate(train):
-            x1 = model.forward(x)
-            data[i][0] = np.array(x1, dtype=float32)
+        datas, _ = chainer.datasets.get_mnist(withlabel=False)
+        print('datas: {0}, train: {1}'.format(datas.ndim, np.shape(train)))
+        x = chainer.Variable(np.asarray(datas))
+        with chainer.using_config('train', False), chainer.no_backprop_mode():
+            train = model.forward(x)
+        train = np.reshape(train, (len(x), 2))
 
-    print('after:train: {0}, test: {1}'.format(len(train), len(test)))
-    sys.exit()
+    print('after:train: {0}, test: {1}'.format(np.shape(train), len(test)))
+    # sys.exit()
     # モデルの生成
     model = net.CNN()
     optimizer = optimizers.Adam()
