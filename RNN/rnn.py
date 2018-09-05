@@ -14,6 +14,7 @@ vocab = {}  # 単語辞書のid
 def load_data(filename):
     global vocab
     words = open(filename).read().replace('\n', '<eos>').strip().split()
+    # <eos>: 文の終わりを表す記号
     dataset = np.ndarray((len(words), ), dtype=np.int32)  # 単語数
     for i, word in enumerate(words):
         if word not in vocab:
@@ -27,6 +28,10 @@ eos_id = vocab['<eos>']
 
 class MyRNN(Chain):
     def __init__(self, v, k):
+        """
+        v: ボキャブラリの数
+        k: 分散表現の次元数
+        """
         super(MyRNN, self).__init__(
             embed=L.EmbedID(v, k),  # 入力(one-hot)
             H=L.Linear(k, k),
@@ -50,6 +55,7 @@ class MyRNN(Chain):
 def main():
     # モデルの生成
     demb = 100
+    # demb: 分散表現の次元
     model = MyRNN(len(vocab), demb)
     optimizer = optimizers.Adam()
     optimizer.setup(model)
